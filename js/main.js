@@ -29,14 +29,24 @@ butonesCategoria.forEach((button) => {
 
 //fetch DEMO de productos.json
 let productos = [];
-
-fetch("./js/productos.json")
+/* fetch("./js/productos.json")
     .then(response => response.json())
     .then(data => {
         productos = data;
         // llamar funcion, ALL products cuando el fetch se complete
         cargarProductos(productos);
-    })
+    }) */
+async function fetchData() {
+    try {
+        let response = await fetch("https://api.escuelajs.co/api/v1/products");
+        let data = await response.json();
+        productos = data;
+        cargarProductos(productos);
+    } catch (error) {
+        console.error(error);
+    }
+}
+fetchData();
 // function para mostrar todos los elementos productos, por cada item del fetch, crea un div
 // productosElegidos para mostrar los datos deseados por categorias
 function cargarProductos(productosElegidos) {
@@ -48,10 +58,10 @@ function cargarProductos(productosElegidos) {
         const div = document.createElement("div");
         div.classList.add("producto");
         div.innerHTML = `
-            <img class="producto-imagen" src="${producto.imagen}" alt="${producto.titulo}">
+            <img class="producto-imagen" src="${producto.images[0]}" alt="${producto.category.name}">
             <div class="producto-detalles">
-                <h3 class="producto-titulo">${producto.titulo}</h3>
-                <p class="producto-precio">$${producto.precio}</p>
+                <h3 class="producto-titulo">${producto.category.name}</h3>
+                <p class="producto-precio">$${producto.price}</p>
                 <button class="producto-agregar" id="${producto.id}">Agregar</button>
             </div>
         `;
@@ -69,15 +79,15 @@ botonesCategorias.forEach(boton => {
         // agregando active al btn especifico
         e.currentTarget.classList.add('active');
         // IF != todos, filtra, else, los trae todos, cambiando el nombre de la vista
-        if (e.currentTarget.id != "todos") {
+        if (e.currentTarget.dataset.id != "todos") {
             // cambiar el titulo de la vista en base al ID, buscando el nombre de la categoria del item
-            const productoCategoria = productos.find(producto => producto.categoria.id === e.currentTarget.id);
-            tituloPrincipal.innerText = productoCategoria.categoria.nombre;
+            const productoCategoria = productos.find(producto => producto.category.id === parseInt(e.currentTarget.dataset.id));
+            tituloPrincipal.innerText = productoCategoria.category.name;
             // recorre y filtra los deseados por ID === al ID del boton
-            const productosBoton = productos.filter(producto => producto.categoria.id === e.currentTarget.id);
+            const productosBoton = productos.filter(producto => producto.category.id === parseInt(e.currentTarget.dataset.id));
             cargarProductos(productosBoton);
         } else {
-            tituloPrincipal.innerText = "Todos los productos";
+            tituloPrincipal.innerText = "All items";
             cargarProductos(productos);
         }
     })
@@ -106,7 +116,7 @@ if (productosEnCarritoLS) {
 
 function agregarAlCarrito(e) {
     // traer el item por ID como evento y agregarlo a un array
-    const idBoton = e.currentTarget.id;
+    const idBoton = parseInt(e.currentTarget.id);
     const productoAgregado = productos.find(producto => producto.id === idBoton);
     // checa ID del item a agregar al array, if some true, suma +1 a cantidad de items, else pushea el item como nuevo con 1 item en cantidad
     if (productosEnCarrito.some(producto => producto.id === idBoton)) {
